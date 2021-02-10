@@ -1,0 +1,67 @@
+platform :ios, '11.0'
+source 'https://github.com/CocoaPods/Specs.git'
+install! 'cocoapods', :deterministic_uuids => false
+use_frameworks!
+inhibit_all_warnings!
+
+target 'GHActionsTest' do
+  # Pods for GHActionsTest
+  #UI
+  pod 'SnapKit', '~> 5.0'
+  pod 'Charts', '~> 3.3'
+  pod 'CropViewController', '~> 2.5'
+  
+  #Networking
+  pod 'Alamofire', '~> 5.4.0'
+  pod 'AlamofireImage', '~> 4.1.0'
+  pod 'AlamofireNetworkActivityIndicator', '~> 3.1.0'
+  
+  #Rx
+  pod 'RxSwift', '~> 5.0'
+  pod 'RxCocoa', '~> 5.0'
+  pod 'RxDataSources', '~> 4.0'
+  pod 'RxOptional', '~> 4.0'
+  pod 'RxKeyboard', '~> 0.9'
+  pod 'RxGesture', '~> 3.0'
+  pod 'RxRelay', '~> 5.0'
+  
+  #Firebase
+  #For some reason it does not let me specify Crashlytics pod version
+  #`pod install` will fail with error "None of your spec sources contain a spec satisfying the dependency" regardless of the version
+  #Currently installing by default 'v4.3.0'
+  pod 'Firebase/Crashlytics'
+  pod 'Firebase/Analytics', '~> 6.6'
+  
+  #DB
+  pod 'SQLite.swift', '~> 0.12'
+  
+  #Date
+  pod 'SwiftDate', '~> 6.0'
+  
+  #Logging
+  pod 'XCGLogger', '~> 7.0'
+  pod 'UXCam', '~> 3.2.4'
+  
+  #Others
+  pod 'PubNubSwift', '~> 2.5.0'
+  pod 'Intercom', '~> 6.0'
+  
+  #Forked repository
+  pod 'EPSignature', :git => 'https://github.com/juanuribeo13/EPSignature.git', :branch => 'swift_4.2'
+end
+
+target 'GHActionsTestTests' do
+  # Pods for testing
+end
+
+target 'GHActionsTestUITests' do
+  # Pods for testing
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
+    end
+  end
+end
