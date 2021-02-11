@@ -26,6 +26,7 @@ jobs:
     
       - name: Install Dependencies
         run: |
+          cd GHActionsTest
           pod repo update
           pod install
               
