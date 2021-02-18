@@ -18,37 +18,51 @@ jobs:
   build:
     name: Build and Test default scheme using any available iPhone simulator
     runs-on: macos-latest
-
+    
+    strategy:
+      matrix:
+        destination: ['platform=iOS Simulator,OS=14.4,name=iPhone 11']
+        xcode: ['/Applications/Xcode_12.4.app/Contents/Developer']
+        scheme: ['GHActionsTest']
+        workspace: ['GHActionsTest.xcworkspace']
+        
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
+        
+      - name: Log build information
+        run: |
+          echo Show the currently detailed version of Xcode for CLI
+          xcode-select -p
+          echo Show Build Settings
+          xcodebuild -workspace MPCF-TestBench.xcworkspace -scheme '${{ matrix.scheme }}' -showBuildSettings
+          echo Show Build SDK
+          xcodebuild -workspace MPCF-TestBench.xcworkspace -scheme '${{ matrix.scheme }}' -showsdks
+          echo Show Available Destinations
+          xcodebuild -workspace MPCF-TestBench.xcworkspace -scheme '${{ matrix.scheme }}' -showdestinations
+        working-directory: ./GHActionsTest
     
       - name: Install Dependencies
         run: |
           pod install
         working-directory: ./GHActionsTest
-          
+       
       - name: Build for testing
         env:
-          scheme: ${{ 'GHActionsTest' }}
-          platform: ${{ 'iOS Simulator' }}
-        run: |
-          device=`instruments -s -devices | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          echo Device to build: $device
-          echo Platform to build: $platform
-          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          scheme: ${{ matrix.scheme }}
+          workspace: ${{ matrix.workspace }}
+          destination: ${{ matrix.destination }}
+          DEVELOPER_DIR: ${{ matrix.xcode }}
+        run: xcodebuild build-for-testing -scheme "$scheme" -workspace "$workspace" -destination "$destination" -showBuildTimingSummary
         working-directory: ./GHActionsTest
         
       - name: Test
         env:
-          scheme: ${{ 'GHActionsTest' }}
-          platform: ${{ 'iOS Simulator' }}
-        run: |
-          device=`instruments -s -devices | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'`
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          scheme: ${{ matrix.scheme }}
+          workspace: ${{ matrix.workspace }}
+          destination: ${{ matrix.destination }}
+          DEVELOPER_DIR: ${{ matrix.xcode }}
+        run:
+          xcodebuild test-without-building -scheme "$scheme" -workspace "$workspace" -destination "$destination" -showBuildTimingSummary
         working-directory: ./GHActionsTest
