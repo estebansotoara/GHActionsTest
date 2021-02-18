@@ -28,19 +28,10 @@ jobs:
         run: |
           pod install
         working-directory: ./GHActionsTest
-
-      - name: Set Default Scheme
-        run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          echo Scheme list: $scheme_list
-          default= $(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
-        working-directory: ./GHActionsTest
           
       - name: Build for testing
         env:
-          scheme: ${{ 'default' }}
+          scheme: ${{ 'GHActionsTest' }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device= xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'
@@ -57,7 +48,7 @@ jobs:
         
       - name: Test
         env:
-          scheme: ${{ 'default' }}
+          scheme: ${{ 'GHActionsTest' }}
           platform: ${{ 'iOS Simulator' }}
         run: |
           device= xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}'
