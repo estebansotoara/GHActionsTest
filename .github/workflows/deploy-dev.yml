@@ -1,0 +1,72 @@
+name: Deploy development build to firebase
+
+on:
+  push:
+    branches: 
+    - main
+    - Develop
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Deploy development build to firebase
+    runs-on: macos-latest
+    
+    strategy:
+      matrix:
+        destination: ['platform=iOS, id=dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name=Any iOS Device']
+        xcode: ['/Applications/Xcode_12.4.app/Contents/Developer']
+        scheme: ['GHActionsTest']
+        configuration: ['Release']
+        workspace: ['GHActionsTest.xcworkspace']
+        working-directory: ['./GHActionsTest']
+        
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Log build information
+        env:
+          DEVELOPER_DIR: ${{ matrix.xcode }}
+        run: |
+          echo ----------------------------------------------------
+          echo Show the currently detailed version of Xcode for CLI
+          xcode-select -p
+          echo ----------------------------------------------------
+          echo Show Available Destinations
+          xcodebuild -workspace '${{ matrix.workspace }}' -scheme '${{ matrix.scheme }}' -showdestinations
+          echo ----------------------------------------------------
+          echo Show Build Settings
+          xcodebuild -workspace '${{ matrix.workspace }}' -scheme '${{ matrix.scheme }}' -showBuildSettings
+          echo ----------------------------------------------------
+        working-directory: 
+          '${{ matrix.working-directory }}'
+          
+      - name: Install gpg
+        run: brew install gnupg
+    
+      - name: Install Dependencies
+        run: pod install
+        working-directory: '${{ matrix.working-directory }}'
+        
+      - name: Build archive
+        env:
+          scheme: ${{ matrix.scheme }}
+          workspace: ${{ matrix.workspace }}
+          destination: ${{ matrix.destination }}
+          DEVELOPER_DIR: ${{ matrix.xcode }}
+        run: |
+          xcodebuild -sdk iphoneos \
+          -workspace '${{ matrix.workspace }}' \
+          -configuration '${{ matrix.configuration }}' \
+          -scheme '${{ matrix.scheme }}' \
+          -derivedDataPath DerivedData \
+          -archivePath DerivedData/Archive/GHActionsTest archive
+        working-directory: '${{ matrix.working-directory }}'
+          
+      - name: Clean directory
+        run: |
+          rm -rf "${{ github.workspace }}"
